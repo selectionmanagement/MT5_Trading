@@ -21,7 +21,7 @@
     ticker = 'USOUSD.pc'
     interval = mt5.TIMEFRAME_D1  # Minute interval
     from_date = datetime.now() - timedelta(days=365)  # Fetch data starting from one week ago
-    no_of_rows = 3650  # Minutes in a week
+    no_of_rows = 730  # Minutes in a week
 
     # Fetching the rates
     rates = mt5.copy_rates_from(ticker, interval, from_date, no_of_rows)
@@ -46,7 +46,7 @@
     # Parameters for the Monte Carlo simulation
     days = 5  # Number of days to simulate
     initial_price = 78  # Last known price, can be set from df['close'][-1] if dynamic
-    iterations = 5000  # Number of simulation iterations
+    iterations = 1000  # Number of simulation iterations
     daily_volatility = df['log_returns'].std()  # Daily volatility
 
     # Simulate price paths
