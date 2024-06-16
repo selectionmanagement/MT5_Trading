@@ -6,11 +6,10 @@ import numpy as np
 
 mt5.initialize()
 
-login = 1568392
-password = 'D9%gHApP'
-server = 'VantageInternational-Live'
-
-mt5.login(login, password, server)
+login =  # Your ID
+password = '' # Your Password
+server = '' # Your Server
+mt5.login(login, password, server)  
 
 ticker = 'XAUUSD.pc'
 interval = mt5.TIMEFRAME_M15
