@@ -1,0 +1,13 @@
+import MetaTrader5 as mt5
+from datetime import datetime
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+mt5.initialize()
+login =  # Your ID
+password = '' # Your Password
+server = '' # Your Server
+mt5.login(login, password, server)  
+
+print(mt5.account_info())
