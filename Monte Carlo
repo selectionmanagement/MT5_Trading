@@ -1,0 +1,74 @@
+    import MetaTrader5 as mt5
+    from datetime import datetime, timedelta
+    import pandas as pd
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # Initialize and log in to MT5
+    if not mt5.initialize():
+        print("Initialize() failed")
+        mt5.shutdown()
+
+    # Authentication details
+    login =  # Your ID
+    password = '' # Your Password
+    server = '' # Your Server
+    if not mt5.login(login, password, server):
+        print("Login failed")
+        mt5.shutdown()
+
+    # Setting the ticker and parameters for data fetching
+    ticker = 'USOUSD.pc'
+    interval = mt5.TIMEFRAME_D1  # Minute interval
+    from_date = datetime.now() - timedelta(days=365)  # Fetch data starting from one week ago
+    no_of_rows = 3650  # Minutes in a week
+
+    # Fetching the rates
+    rates = mt5.copy_rates_from(ticker, interval, from_date, no_of_rows)
+    if rates is None:
+        print("Failed to get rates")
+        mt5.shutdown()
+    else:
+        print("Data retrieved successfully")
+
+    # Convert to DataFrame for easier manipulation
+    df = pd.DataFrame(rates)
+    df['time'] = pd.to_datetime(df['time'], unit='s')
+    df.set_index('time', inplace=True)
+    print(df.head())
+
+    # Close the MT5 connection
+    mt5.shutdown()
+
+    # Calculate log returns
+    df['log_returns'] = np.log(df['close'] / df['close'].shift(1))
+
+    # Parameters for the Monte Carlo simulation
+    days = 5  # Number of days to simulate
+    initial_price = 78  # Last known price, can be set from df['close'][-1] if dynamic
+    iterations = 5000  # Number of simulation iterations
+    daily_volatility = df['log_returns'].std()  # Daily volatility
+
+    # Simulate price paths
+    np.random.seed(42)  # For reproducibility
+    price_paths = np.zeros((days + 1, iterations))
+    price_paths[0] = initial_price
+
+    for t in range(1, days + 1):
+        random_shocks = np.random.normal(0, daily_volatility, iterations)
+        price_paths[t] = price_paths[t - 1] * np.exp(random_shocks)
+
+    # Calculating percentiles
+    percentile_95 = np.percentile(price_paths, 95, axis=1)
+    percentile_5 = np.percentile(price_paths, 5, axis=1)
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    plt.plot(price_paths, color='grey', alpha=0.2)  # Plot all paths
+    plt.plot(percentile_95, 'r-', label='95th percentile')
+    plt.plot(percentile_5, 'b-', label='5th percentile')
+    plt.title('Monte Carlo Simulation of Future Close Prices Over {} Days (1000 Paths)'.format(days))
+    plt.xlabel('Days')
+    plt.ylabel('Price')
+    plt.legend()
+    plt.show()
