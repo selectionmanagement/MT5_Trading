@@ -1,0 +1,53 @@
+import MetaTrader5 as mt5
+from datetime import datetime
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Initialize and log in to MT5
+if not mt5.initialize():
+    print("Initialize() failed")
+    mt5.shutdown()
+
+# MT5 login credentials
+login =  # Your ID
+password = '' # Your Password
+server = '' # Your Server
+if not mt5.login(login, password, server):
+    print("Login failed")
+    mt5.shutdown()
+
+# Define the currency pairs and the timeframe
+symbols = ["EURUSD.pc", "GBPUSD.pc", "USDJPY.pc", "AUDUSD.pc", "USDCHF.pc", "USDCAD.pc" ,"XAUUSD.pc", "XAGUSD.pc", "USOUSD.pc" ]
+timeframe = mt5.TIMEFRAME_D1  # Daily timeframe
+start_date = datetime(2023, 1, 1)
+end_date = datetime(2023, 12, 31)
+
+# Fetch historical data for each symbol
+dataframes = []
+for symbol in symbols:
+    rates = mt5.copy_rates_range(symbol, timeframe, start_date, end_date)
+    if rates is None:
+        print(f"Failed to get data for {symbol}")
+    else:
+        df = pd.DataFrame(rates)
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df.set_index('time', inplace=True)
+        dataframes.append(df['close'].rename(symbol))
+
+# Combine the data into a single DataFrame
+combined_df = pd.concat(dataframes, axis=1)
+
+# Calculate the correlation matrix
+correlation_matrix = combined_df.corr()
+
+# Plot the correlation matrix
+plt.figure(figsize=(10, 8))
+plt.matshow(correlation_matrix, fignum=1)
+plt.xticks(range(len(correlation_matrix.columns)), correlation_matrix.columns, rotation=90)
+plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
+plt.colorbar()
+plt.title('Currency Pair Correlation Matrix', y=1.15)
+plt.show()
+
+# Shutdown MT5 connection
+mt5.shutdown()
