@@ -1,0 +1,90 @@
+import MetaTrader5 as mt5
+from datetime import datetime
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Initialize and log in to MT5
+if not mt5.initialize():
+    print("Initialize() failed")
+    mt5.shutdown()
+
+login =  # Your ID
+password = '' # Your Password
+server = '' # Your Server
+if not mt5.login(login, password, server):
+    print("Login failed")
+    mt5.shutdown()
+
+# Setting the ticker and parameters for data fetching
+ticker = 'UKOUSDft.pc'
+ticker_2 = 'USOUSD.pc'
+interval = mt5.TIMEFRAME_H1
+from_date = datetime.now()
+no_of_rows = 10000
+
+
+rates = mt5.copy_rates_from(ticker, interval, from_date, no_of_rows)
+rates_2 = mt5.copy_rates_from(ticker_2, interval, from_date, no_of_rows)
+
+# Shut down MT5 connection
+mt5.shutdown()
+
+# Convert rates to DataFrame and set 'time' as the index
+df = pd.DataFrame(rates)
+df_2 = pd.DataFrame(rates_2)
+df['time'] = pd.to_datetime(df['time'], unit='s')
+df_2['time'] = pd.to_datetime(df_2['time'], unit='s')
+df.set_index('time', inplace=True)
+df_2.set_index('time', inplace=True)
+
+# Calculate the spread between the closing prices
+spread = df_2['close'] - df['close']
+print(spread)
+# Calculate the standard deviation and mean of the spread
+spread_std = spread.std()
+spread_mean = spread.mean()
+
+# Calculate the Z-score for the spread
+spread_z_score = (spread - spread_mean) / spread_std
+print(spread_z_score)
+# Plot the closing prices, spread, and Z-score
+plt.figure(figsize=(14, 12))
+
+# Subplot 1: Closing prices for ticker
+plt.subplot(4, 1, 1) # (rows, columns, panel number)
+plt.plot(df['close'], label='Closing Prices UKOUSDft', color='green')
+plt.title('Closing Prices UKOUSDft')
+plt.xlabel('Time')
+plt.ylabel('Price')
+plt.legend()
+plt.grid(True)
+
+# Subplot 2: Closing prices for ticker_2
+plt.subplot(4, 1, 2) # (rows, columns, panel number)
+plt.plot(df_2['close'], label='Closing Prices USOUSD', color='red')
+plt.title('Closing Prices USOUSD')
+plt.xlabel('Time')
+plt.ylabel('Price')
+plt.legend()
+plt.grid(True)
+
+# Subplot 3: Spread between the tickers
+plt.subplot(4, 1, 3) # (rows, columns, panel number)
+plt.plot(spread, label='Spread', color='blue')
+plt.title('Spread UKOUSDft vs USOUSD')
+plt.xlabel('Time')
+plt.ylabel('Spread')
+plt.legend()
+plt.grid(True)
+
+# Subplot 4: Z-score of the Spread
+plt.subplot(4, 1, 4) # (rows, columns, panel number)
+plt.plot(spread_z_score, label='Spread Z-score', color='purple')
+plt.title('Spread Z-score')
+plt.xlabel('Time')
+plt.ylabel('Z-score')
+plt.legend()
+plt.grid(True)
+
+plt.tight_layout() # Adjust subplots to fit into figure area.
+plt.show()
