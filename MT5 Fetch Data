@@ -1,0 +1,21 @@
+import MetaTrader5 as mt5
+from datetime import datetime
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+mt5.initialize()
+
+login = 1568392
+password = 'D9%gHApP'
+server = 'VantageInternational-Live'
+
+mt5.login(login, password, server)
+
+ticker = 'XAUUSD.pc'
+interval = mt5.TIMEFRAME_M15
+from_date = datetime.now()
+no_of_rows = 1000
+
+rates= mt5.copy_rates_from(ticker, interval, from_date, no_of_rows)
+print(rates)
